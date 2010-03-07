@@ -26,7 +26,7 @@ class monkeysphere {
   # Server host key publication
   case $monkeysphere_publish_key {
     false: {
-             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $fqdn":
+             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ssh://$fqdn":
                unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=ssh://$fqdn' &> /dev/null",
                user    => "root",
                require => Package["monkeysphere"],
