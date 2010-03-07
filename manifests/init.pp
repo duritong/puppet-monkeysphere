@@ -23,19 +23,26 @@ class monkeysphere {
   # The needed packages
   package { monkeysphere: ensure => installed, }
 
+  $ssh_port = $monkeysphere_ssh_port ? {
+    ''      => '',
+    default => ":$monkeysphere_ssh_port",
+  }
+
+  $key = "ssh://${fqdn}{$ssh_port}"
+
   # Server host key publication
   case $monkeysphere_publish_key {
     false: {
-             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ssh://$fqdn":
-               unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=ssh://$fqdn' &> /dev/null",
+             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $key":
+               unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=$key' &> /dev/null",
                user    => "root",
                require => Package["monkeysphere"],
              }
            }
     default: {
-            exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $fqdn && \
+            exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $key && \
                     /usr/sbin/monkeysphere-host publish-key":
-              unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=ssh://$fqdn' &> /dev/null",
+              unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=$key' &> /dev/null",
               user    => "root",
               require => Package["monkeysphere"],
             }
