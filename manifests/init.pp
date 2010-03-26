@@ -28,7 +28,7 @@ class monkeysphere {
     default => ":$monkeysphere_ssh_port",
   }
 
-  $key = "ssh://${fqdn}{$ssh_port}"
+  $key = "ssh://${fqdn}${ssh_port}"
 
   # Server host key publication
   case $monkeysphere_publish_key {
