@@ -30,29 +30,37 @@ class monkeysphere {
 
   $key = "ssh://${fqdn}${ssh_port}"
 
+  file { "/usr/local/sbin/monkeysphere-check-key":
+    ensure  => present,
+    owner   => root,
+    group   => root,
+    mode    => 0755,
+    content => "#!/bin/bash\n/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=$key' &> /dev/null || false",
+  }
+
   # Server host key publication
   case $monkeysphere_publish_key {
     false: {
              exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $key":
-               unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=$key' &> /dev/null",
+               unless  => "/usr/local/sbin/monkeysphere-check-key",
                user    => "root",
-               require => Package["monkeysphere"],
+               require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
              }
            }
     'mail': {
             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $key && \
                     /usr/bin/mail -s 'monkeysphere host pgp key for $fqdn' root < /var/lib/monkeysphere/host_keys.pub.pgp":
-              unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=$key' &> /dev/null",
+              unless  => "/usr/local/sbin/monkeysphere-check-key",
               user    => "root",
-              require => Package["monkeysphere"],
+              require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
             }
           }
     default: {
             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $key && \
                     /usr/sbin/monkeysphere-host publish-key":
-              unless  => "/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=$key' &> /dev/null",
+              unless  => "/usr/local/sbin/monkeysphere-check-key",
               user    => "root",
-              require => Package["monkeysphere"],
+              require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
             }
           }
   }
