@@ -1,0 +1,30 @@
+puppet module for monkeysphere
+
+for information about monkeysphere, see http://web.monkeysphere.info/
+
+To install the monkeypshere module:
+
+* storeconfigs must be enabled in your puppet server. see:
+  http://projects.puppetlabs.com/projects/1/wiki/Using_Stored_Configuration#Configuring+basic+storeconfigs
+
+* copy the code to a directory named "monkeysphere" in the modules
+  directory of your puppet install.  This will usually be
+  /etc/puppetd/modules/monkeysphere
+
+* add the following line to modules.pp:
+
+  import "monkeysphere"
+
+* in node definitions that should export a ssh host key via
+  monkeyshere, add:
+
+  include monkeysphere::sshserver
+
+A host can be configured as a host you would use to sign the gpg keys by placing:
+
+  include monkeysphere::signer
+
+into the node definition. ON this host, a file will be placed in
+/var/lib/puppet/monkeysphere/hosts for each host configured as a
+sshserver.  Each file will contin the gpg id, the gpg fingerprint, and
+the ssh fingerprint of the sshserver.
