@@ -1,7 +1,7 @@
 has_hostkey = false
-pgp_fingerprint = ''
-pgp_id = ''
-ssh_fingerprint = ''
+pgp_fingerprint = ' '
+pgp_id = ' '
+ssh_fingerprint = ' '
 
 if File.exist?('/usr/sbin/monkeysphere-host')
 
