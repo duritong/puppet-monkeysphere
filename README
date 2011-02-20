@@ -20,6 +20,12 @@ To install the monkeypshere module:
 
   include monkeysphere::sshserver
 
+* You can specify pgpids of identity certifiers:
+
+  identity_certifier { "A3AE44A4":
+    ensure => present
+  }
+
 A host can be configured as a host you would use to sign the gpg keys by placing:
 
   include monkeysphere::signer
