@@ -48,8 +48,12 @@ class monkeysphere {
              }
            }
     'mail': {
+            $mail_loc = $operatingsystem ? {
+               'centos' => '/bin/mail',
+               default => '/usr/bin/mail',
+            }
             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key $key && \
-                    /usr/bin/mail -s 'monkeysphere host pgp key for $fqdn' root < /var/lib/monkeysphere/host_keys.pub.pgp":
+                    ${mail_loc} -s 'monkeysphere host pgp key for $fqdn' root < /var/lib/monkeysphere/host_keys.pub.pgp":
               unless  => "/usr/local/sbin/monkeysphere-check-key",
               user    => "root",
               require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
