@@ -21,7 +21,7 @@
 #
 class monkeysphere(
   $ssh_port = '',
-  $publish_key = hiera('monkeysphere_publish_key',false)
+  $publish_key = false
 ) {
   # The needed packages
   package { monkeysphere: ensure => installed, }
