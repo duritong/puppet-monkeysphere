@@ -28,7 +28,7 @@ class monkeysphere(
 
   $port = $monkeysphere::ssh_port ? {
     ''      => '',
-    default => ":${monkeyspherer::ssh_port}",
+    default => ":${monkeysphere::ssh_port}",
   }
 
   $key = "ssh://${::fqdn}${port}"
