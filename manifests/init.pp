@@ -36,44 +36,39 @@ class monkeysphere(
 
   $key = "ssh://${::fqdn}${port}"
 
-  common::module_dir { [ "monkeysphere", "monkeysphere/hosts", "monkeysphere/plugins" ]: }
+  common::module_dir { [ 'monkeysphere', 'monkeysphere/hosts', 'monkeysphere/plugins' ]: }
   file {
     '/usr/local/sbin/monkeysphere-check-key':
       ensure  => present,
       owner   => root,
       group   => root,
-      mode    => 0755,
+      mode    => '0755',
       content => "#!/bin/bash\n/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=${key}' &> /dev/null || false",
   }
 
   # Server host key publication
+  Exec{
+    unless  => '/usr/local/sbin/monkeysphere-check-key',
+    user    => 'root',
+    require => [ Package['monkeysphere'], File['/usr/local/sbin/monkeysphere-check-key'] ],
+  }
   case $monkeysphere::publish_key {
     false: {
-             exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ${key}":
-               unless  => "/usr/local/sbin/monkeysphere-check-key",
-               user    => "root",
-               require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
-             }
-           }
+      exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ${key}": }
+    }
     'mail': {
-            $mail_loc = $::operatingsystem ? {
-               'centos' => '/bin/mail',
-               default => '/usr/bin/mail',
-            }
-            exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ${key} && \
-                    ${mail_loc} -s 'monkeysphere host pgp key for ${::fqdn}' root < /var/lib/monkeysphere/host_keys.pub.pgp":
-              unless  => "/usr/local/sbin/monkeysphere-check-key",
-              user    => "root",
-              require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
-            }
-          }
+      $mail_loc = $::operatingsystem ? {
+        'centos' => '/bin/mail',
+        default => '/usr/bin/mail',
+      }
+      exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ${key} && \
+          ${mail_loc} -s 'monkeysphere host pgp key for ${::fqdn}' root < /var/lib/monkeysphere/host_keys.pub.pgp":
+      }
+    }
     default: {
-            exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ${key} && \
-                    /usr/sbin/monkeysphere-host publish-key":
-              unless  => "/usr/local/sbin/monkeysphere-check-key",
-              user    => "root",
-              require => [ Package["monkeysphere"], File["/usr/local/sbin/monkeysphere-check-key"] ],
-            }
-          }
+      exec { "/usr/sbin/monkeysphere-host import-key /etc/ssh/ssh_host_rsa_key ${key} && \
+          echo Y | /usr/sbin/monkeysphere-host publish-key":
+      }
+    }
   }
 }
