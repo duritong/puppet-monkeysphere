@@ -20,11 +20,14 @@
 # Class for monkeysphere management
 #
 class monkeysphere(
-  $ssh_port = '',
-  $publish_key = false
+  $ssh_port       = '',
+  $publish_key    = false,
+  $ensure_version = 'installed'
 ) {
   # The needed packages
-  package { monkeysphere: ensure => installed, }
+  package{'monkeysphere':
+    ensure => $ensure_version,
+  }
 
   $port = $monkeysphere::ssh_port ? {
     ''      => '',
@@ -33,12 +36,14 @@ class monkeysphere(
 
   $key = "ssh://${::fqdn}${port}"
 
-  file { "/usr/local/sbin/monkeysphere-check-key":
-    ensure  => present,
-    owner   => root,
-    group   => root,
-    mode    => 0755,
-    content => "#!/bin/bash\n/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=${key}' &> /dev/null || false",
+  common::module_dir { [ "monkeysphere", "monkeysphere/hosts", "monkeysphere/plugins" ]: }
+  file {
+    '/usr/local/sbin/monkeysphere-check-key':
+      ensure  => present,
+      owner   => root,
+      group   => root,
+      mode    => 0755,
+      content => "#!/bin/bash\n/usr/bin/gpg --homedir /var/lib/monkeysphere/host --list-keys '=${key}' &> /dev/null || false",
   }
 
   # Server host key publication
